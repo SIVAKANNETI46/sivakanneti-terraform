@@ -1,14 +1,13 @@
 provider "aws" {
-  access_key = "AKIA4YRWKD5QPTNDTA4B"
-  secret_key = "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"
+shared_credentials_file  = "~/.aws/credentials"
   region     = "us-east-1"
 }
 
 resource "aws_instance" "instance" {
-  ami                    = "ami-0747bdcabd34c712a"
-  instance_type          = "t2.micro"
+  ami                    = var.ami
+  instance_type          = var.instance_type
   user_data              = "${file("init.sh")}"
-  key_name               = "kub"
+  key_name               = var.key
   vpc_security_group_ids = ["${aws_security_group.allow.id}"]
 }
 
@@ -18,7 +17,10 @@ resource "aws_default_vpc" "default" {
     Name = "Default VPC"
   }
 }
+data "aws_availability_zones" "avail" { 
+  all_availability_zones = true
 
+}
 resource "aws_security_group" "allow" {
   name        = "allow_tls"
   description = "Allow TLS inbound traffic"
@@ -56,7 +58,7 @@ resource "aws_security_group" "allow" {
   }
 }
 
-resource "aws_elb" "bar" {
+resource "aws_elb" "loadbalancer" {
   name                   = "demo"
   availability_zones     = ["us-east-1a", "us-east-1b", "us-east-1c"]
 listener {
